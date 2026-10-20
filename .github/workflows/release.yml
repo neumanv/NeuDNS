@@ -59,7 +59,14 @@ jobs:
             exit 1
           fi
           export SIGNING_KEYSTORE_FILE="$RUNNER_TEMP/release.jks"
-          echo "$SIGNING_KEYSTORE_BASE64" | base64 --decode > "$SIGNING_KEYSTORE_FILE"
+          # Se eliminan saltos de línea y espacios que se cuelan al copiar el secreto desde Windows.
+          keystore_b64=$(printf '%s' "$SIGNING_KEYSTORE_BASE64" | tr -d '\r\n\t ')
+          invalid=$(printf '%s' "$keystore_b64" | tr -d 'A-Za-z0-9+/=' | wc -c)
+          if [ "$invalid" -ne 0 ]; then
+            echo "::error::SIGNING_KEYSTORE_BASE64 contiene $invalid caracteres no válidos (longitud: ${#keystore_b64})"
+            exit 1
+          fi
+          printf '%s' "$keystore_b64" | base64 --decode > "$SIGNING_KEYSTORE_FILE"
           ./gradlew --no-daemon assembleRelease
           rm -f "$SIGNING_KEYSTORE_FILE"
 
