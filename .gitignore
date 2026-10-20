@@ -1,0 +1,29 @@
+# Gradle
+.gradle/
+build/
+.kotlin/
+
+# Configuración local (ruta del SDK de cada equipo)
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Binarios: las APK se publican en Releases, no en el repositorio
+*.apk
+*.aab
+
+# Claves de firma: nunca en el repositorio
+*.jks
+*.keystore
+*.p12
+keystore.properties
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini

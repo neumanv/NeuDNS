@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">NeuDNS</string>
+    <string name="tile_label">NeuDNS</string>
+
+    <string name="intro">Seleccione las aplicaciones en las que se bloquearán los anuncios y pulse Activar. El resto de aplicaciones no se ve afectado.</string>
+    <plurals name="status_on">
+        <item quantity="one">Activo · %1$d aplicación protegida con %2$s</item>
+        <item quantity="other">Activo · %1$d aplicaciones protegidas con %2$s</item>
+    </plurals>
+    <string name="status_off">Desactivado</string>
+    <string name="action_start">Activar filtro</string>
+    <string name="action_stop">Desactivar filtro</string>
+    <string name="action_start_short">Activar</string>
+    <string name="action_stop_short">Desactivar</string>
+    <plurals name="status_on_short">
+        <item quantity="one">Activo · %1$d aplicación</item>
+        <item quantity="other">Activo · %1$d aplicaciones</item>
+    </plurals>
+    <string name="provider_label">Contenido bloqueado</string>
+    <string name="search_hint">Buscar aplicación…</string>
+    <string name="loading_apps">Cargando aplicaciones…</string>
+    <plurals name="selected_count">
+        <item quantity="one">%1$d aplicación seleccionada</item>
+        <item quantity="other">%1$d aplicaciones seleccionadas</item>
+    </plurals>
+    <string name="select_at_least_one">Seleccione al menos una aplicación</string>
+
+    <string name="warning_private_dns">⚠ «DNS privado» está configurado con un servidor propio, lo que permite a las aplicaciones eludir el filtro. Pulse aquí y seleccione «Automático» o «Desactivado».</string>
+
+    <string name="error_no_apps">No hay ninguna aplicación seleccionada.</string>
+    <string name="error_apps_missing">Las aplicaciones seleccionadas ya no están instaladas.</string>
+    <string name="error_vpn_denied">Android no ha permitido crear la VPN. Si hay otra VPN en uso, desactívela y pulse Activar de nuevo.</string>
+    <string name="error_internal">No se ha podido iniciar el filtro. Pulse Activar de nuevo.</string>
+    <string name="error_revoked">El filtro se ha desactivado porque se ha activado otra VPN o se ha revocado el permiso desde Ajustes.</string>
+
+    <string name="provider_mullvad_base">Mullvad Base (anuncios, rastreadores y malware)</string>
+    <string name="provider_mullvad_adblock">Mullvad Adblock (anuncios y rastreadores)</string>
+    <string name="provider_adguard">AdGuard (anuncios y rastreadores)</string>
+    <string name="provider_mullvad_plain">Mullvad sin bloqueo (solo privacidad)</string>
+</resources>
