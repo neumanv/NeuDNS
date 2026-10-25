@@ -12,4 +12,17 @@
         <item name="android:textColorPrimary">@color/on_surface</item>
         <item name="android:textColorSecondary">@color/muted</item>
     </style>
+
+    <!-- Fila de la tarjeta que abre un diálogo (dominios, pausa, diagnóstico…). -->
+    <style name="CardRow">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:paddingHorizontal">4dp</item>
+        <item name="android:textColor">@color/accent</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
 </resources>

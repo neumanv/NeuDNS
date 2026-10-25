@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 12+: solo se copia la configuración (apps elegidas y servidor), nada más. -->
+<!-- Android 12+: solo se copia la configuración (apps elegidas, servidor y dominios permitidos y bloqueados), nada más. El recuento y el diagnóstico solo existen en memoria. -->
 <data-extraction-rules>
     <cloud-backup>
         <include domain="sharedpref" path="config.xml" />

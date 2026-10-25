@@ -3,6 +3,7 @@ package io.github.neumanv.neudns.ui
 import android.app.Activity
 import android.content.pm.ApplicationInfo
 import android.graphics.drawable.Drawable
+import android.text.TextUtils
 import android.util.LruCache
 import android.view.View
 import android.view.ViewGroup
@@ -14,8 +15,8 @@ import io.github.neumanv.neudns.R
 import java.util.concurrent.Executor
 import java.util.concurrent.RejectedExecutionException
 
-/** Una app instalada que se puede elegir. */
-class AppEntry(val pkg: String, val label: String, val info: ApplicationInfo)
+/** Una app instalada que se puede elegir. [sharesUid]: Android le aplica la VPN junto a otras apps. */
+class AppEntry(val pkg: String, val label: String, val info: ApplicationInfo, val sharesUid: Boolean)
 
 /**
  * Lista de apps con casilla. Las marcadas aparecen primero. Los iconos se cargan en segundo
@@ -68,7 +69,10 @@ class AppListAdapter(
         val checked = isSelected(app.pkg)
         holder.pkg = app.pkg
         holder.label.text = app.label
-        holder.pkgText.text = app.pkg
+        holder.pkgText.text = if (app.sharesUid) activity.getString(R.string.shared_uid) else app.pkg
+        // El aviso se lee entero; el nombre del paquete se acorta por el medio.
+        holder.pkgText.maxLines = if (app.sharesUid) 2 else 1
+        holder.pkgText.ellipsize = if (app.sharesUid) TextUtils.TruncateAt.END else TextUtils.TruncateAt.MIDDLE
         holder.check.isChecked = checked
         holder.row.isActivated = checked
         holder.row.contentDescription = app.label

@@ -52,6 +52,16 @@
                 android:textColor="@color/muted"
                 android:textSize="14sp" />
 
+            <!-- Apps instaladas que no se ofrecen porque sus anuncios no se pueden bloquear -->
+            <TextView
+                android:id="@+id/unblockable_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp"
+                android:textColor="@color/muted"
+                android:textSize="13sp"
+                android:visibility="gone" />
+
             <!-- Estado, botón principal y servidor -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -85,6 +95,17 @@
                         android:textStyle="bold" />
                 </LinearLayout>
 
+                <!-- Consultas y bloqueos desde que se encendió, solo en memoria -->
+                <TextView
+                    android:id="@+id/stats"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="22dp"
+                    android:paddingTop="4dp"
+                    android:textColor="@color/muted"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
                 <TextView
                     android:id="@+id/message"
                     android:layout_width="match_parent"
@@ -108,6 +129,13 @@
                     android:textSize="17sp"
                     android:textStyle="bold" />
 
+                <!-- Pausar o reanudar el bloqueo sin apagar el filtro -->
+                <TextView
+                    android:id="@+id/pause"
+                    style="@style/CardRow"
+                    android:layout_marginTop="6dp"
+                    android:visibility="gone" />
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -122,6 +150,27 @@
                     android:layout_height="wrap_content"
                     android:minHeight="48dp"
                     android:popupBackground="@drawable/bg_card" />
+
+                <!-- Dirección del servidor personalizado: solo si está seleccionado -->
+                <TextView
+                    android:id="@+id/custom_server"
+                    style="@style/CardRow"
+                    android:visibility="gone" />
+
+                <!-- Dominios que no se bloquean: abre la lista para añadir o quitar -->
+                <TextView
+                    android:id="@+id/exceptions"
+                    style="@style/CardRow" />
+
+                <!-- Dominios que se bloquean además de los del servidor -->
+                <TextView
+                    android:id="@+id/blocked"
+                    style="@style/CardRow" />
+
+                <!-- Últimos dominios bloqueados, para saber qué permitir si una app falla -->
+                <TextView
+                    android:id="@+id/diagnostics"
+                    style="@style/CardRow" />
             </LinearLayout>
         </LinearLayout>
 

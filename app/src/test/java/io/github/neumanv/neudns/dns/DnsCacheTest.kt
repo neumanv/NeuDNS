@@ -2,6 +2,7 @@ package io.github.neumanv.neudns.dns
 
 import io.github.neumanv.neudns.TestDns
 import io.github.neumanv.neudns.net.u16
+import io.github.neumanv.neudns.net.u32
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -86,5 +87,23 @@ class DnsCacheTest {
         assertNull(cache.get(oldest, DnsMessage.questionEnd(oldest)))
         val newest = TestDns.query("c.com")
         assertNotNull(cache.get(newest, DnsMessage.questionEnd(newest)))
+    }
+
+    @Test
+    fun expiredAnswerIsOnlyServedAsStaleWithShortTtl() {
+        var time = 0L
+        val cache = DnsCache(now = { time })
+        val query = TestDns.query("example.com")
+        val end = DnsMessage.questionEnd(query)
+        cache.put(query, end, TestDns.answer(query, 60))
+
+        time = 61_000
+        assertNull(cache.get(query, end))
+        val stale = cache.getStale(query, end)!!
+        val ttl = DnsMessage.ttlOffsets(stale)!!.single()
+        assertEquals(30L, stale.u32(ttl))
+
+        time = 61_000 + 24 * 3600 * 1000L
+        assertNull(cache.getStale(query, end)) // demasiado antigua: se descarta
     }
 }

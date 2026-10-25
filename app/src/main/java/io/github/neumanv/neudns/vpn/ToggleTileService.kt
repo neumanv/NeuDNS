@@ -8,6 +8,7 @@ import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import io.github.neumanv.neudns.Prefs
+import io.github.neumanv.neudns.R
 import io.github.neumanv.neudns.ui.MainActivity
 
 /** Botón de ajustes rápidos para encender o apagar el filtro sin abrir la app. */
@@ -32,7 +33,11 @@ class ToggleTileService : TileService() {
         val tile = qsTile ?: return
         val running = VpnState.status.running
         tile.state = if (running) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
-        tile.subtitle = getString(Prefs(this).provider.nameRes).substringBefore(" (")
+        tile.subtitle = if (VpnState.status.paused) {
+            getString(R.string.tile_paused)
+        } else {
+            getString(Prefs(this).provider.nameRes).substringBefore(" (")
+        }
         tile.updateTile()
     }
 

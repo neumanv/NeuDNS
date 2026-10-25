@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">NeuDNS</string>
     <string name="tile_label">NeuDNS</string>
+    <string name="tile_paused">En pausa</string>
 
     <string name="intro">Seleccione las aplicaciones en las que se bloquearán los anuncios y pulse Activar. El resto de aplicaciones no se ve afectado.</string>
     <plurals name="status_on">
@@ -17,6 +18,21 @@
         <item quantity="one">Activo · %1$d aplicación</item>
         <item quantity="other">Activo · %1$d aplicaciones</item>
     </plurals>
+    <plurals name="status_paused">
+        <item quantity="one">En pausa · el bloqueo se reanuda en %1$d minuto</item>
+        <item quantity="other">En pausa · el bloqueo se reanuda en %1$d minutos</item>
+    </plurals>
+    <string name="status_paused_short">En pausa</string>
+    <string name="stats">Consultas: %1$s · bloqueadas: %2$s (%3$d %%)</string>
+    <string name="stats_none">Aún no hay consultas de las aplicaciones seleccionadas</string>
+    <string name="pause_action">Pausar el bloqueo ›</string>
+    <string name="resume_action">Reanudar el bloqueo ahora ›</string>
+    <string name="pause_title">Pausar el bloqueo durante…</string>
+    <string-array name="pause_options">
+        <item>5 minutos</item>
+        <item>15 minutos</item>
+        <item>1 hora</item>
+    </string-array>
     <string name="provider_label">Contenido bloqueado</string>
     <string name="search_hint">Buscar aplicación…</string>
     <string name="loading_apps">Cargando aplicaciones…</string>
@@ -25,7 +41,70 @@
         <item quantity="other">%1$d aplicaciones seleccionadas</item>
     </plurals>
     <string name="select_at_least_one">Seleccione al menos una aplicación</string>
+    <string name="unblockable_note">ℹ No aparecen %1$s: sus anuncios llegan desde los mismos servidores que el contenido, así que bloquearlos por DNS dejaría la aplicación sin funcionar.</string>
+    <string name="list_last_separator">" y "</string>
 
+    <string name="exceptions_unavailable">Dominios permitidos: no disponibles con este servidor</string>
+    <string name="exceptions_unavailable_toast">Con este servidor no se pueden permitir dominios</string>
+    <string name="exceptions_none">Dominios permitidos: ninguno ›</string>
+    <plurals name="exceptions_count">
+        <item quantity="one">Dominios permitidos: %1$d ›</item>
+        <item quantity="other">Dominios permitidos: %1$d ›</item>
+    </plurals>
+    <string name="exceptions_title">Dominios permitidos</string>
+    <string name="exceptions_empty">Si una aplicación seleccionada deja de funcionar porque el servidor bloquea un dominio que necesita, añádalo aquí: se resolverá sin bloqueo, junto con sus subdominios.</string>
+    <string name="exceptions_add">Añadir</string>
+    <string name="exceptions_add_title">Permitir un dominio</string>
+    <string name="exceptions_add_message">El dominio y sus subdominios no se bloquearán en las aplicaciones seleccionadas.</string>
+    <string name="exceptions_hint">ejemplo.com</string>
+    <string name="exceptions_invalid">Escriba un dominio válido, como ejemplo.com</string>
+    <string name="exceptions_remove_confirm">¿Quitar %1$s de los dominios permitidos?</string>
+    <string name="exceptions_remove">Quitar</string>
+
+    <string name="blocked_none">Dominios bloqueados: ninguno ›</string>
+    <plurals name="blocked_count">
+        <item quantity="one">Dominios bloqueados: %1$d ›</item>
+        <item quantity="other">Dominios bloqueados: %1$d ›</item>
+    </plurals>
+    <string name="blocked_title">Dominios bloqueados</string>
+    <string name="blocked_empty">Añada aquí los dominios que quiera bloquear aunque el servidor los permita, por ejemplo un rastreador concreto. También se bloquearán sus subdominios.</string>
+    <string name="blocked_add_title">Bloquear un dominio</string>
+    <string name="blocked_add_message">El dominio y sus subdominios no se resolverán en las aplicaciones seleccionadas.</string>
+    <string name="blocked_remove_confirm">¿Quitar %1$s de los dominios bloqueados?</string>
+
+    <string name="diagnostics_off">Ver qué se bloquea ›</string>
+    <plurals name="diagnostics_on">
+        <item quantity="one">Viendo qué se bloquea · queda %1$d minuto ›</item>
+        <item quantity="other">Viendo qué se bloquea · quedan %1$d minutos ›</item>
+    </plurals>
+    <string name="diagnostics_done">Ver lo que se ha bloqueado ›</string>
+    <string name="diagnostics_need_running">Active el filtro para ver qué se bloquea</string>
+    <string name="diagnostics_intro_title">Ver qué se bloquea</string>
+    <string name="diagnostics_intro">Durante 10 minutos se anotarán los dominios que se bloqueen en las aplicaciones seleccionadas. Use ahora la aplicación que falla y vuelva aquí para ver la lista.
+
+La lista solo se guarda en la memoria del teléfono, nunca se envía a ningún sitio y se borra al detener el diagnóstico, al desactivar el filtro o media hora después de terminar.</string>
+    <string name="diagnostics_start">Empezar</string>
+    <plurals name="diagnostics_title">
+        <item quantity="one">Bloqueados · queda %1$d minuto</item>
+        <item quantity="other">Bloqueados · quedan %1$d minutos</item>
+    </plurals>
+    <string name="diagnostics_title_done">Bloqueados durante el diagnóstico</string>
+    <string name="diagnostics_empty">Aún no se ha bloqueado nada. Use la aplicación que falla y vuelva aquí. Toque un dominio para permitirlo.</string>
+    <string name="diagnostics_empty_done">No se ha bloqueado nada durante el diagnóstico.</string>
+    <string name="diagnostics_item_repeated">%1$s ×%2$d</string>
+    <string name="diagnostics_item_user">%1$s · bloqueado por usted</string>
+    <string name="diagnostics_stop">Detener y borrar</string>
+
+    <string name="custom_server_row">Servidor: %1$s ›</string>
+    <string name="custom_title">Servidor personalizado</string>
+    <string name="custom_message">Escriba la dirección DNS-over-HTTPS del servidor, por ejemplo https://dns.nextdns.io/abc123. Con un servidor personalizado no se pueden permitir dominios ni pausar el bloqueo.</string>
+    <string name="custom_hint">https://servidor/dns-query</string>
+    <string name="custom_invalid">Escriba una dirección https válida</string>
+    <string name="save">Guardar</string>
+    <string name="close">Cerrar</string>
+
+    <string name="warning_lockdown">⚠ «Bloquear conexiones sin VPN» está activado: Android deja sin internet a las aplicaciones no seleccionadas y a todo lo que no es DNS en las seleccionadas. Pulse aquí, abra NeuDNS y desactive esa opción (puede mantener «VPN siempre activa»).</string>
+    <string name="shared_uid">⚠ Comparte conexión con otras aplicaciones: el filtro también se les aplicará</string>
     <string name="warning_private_dns">⚠ «DNS privado» está configurado con un servidor propio, lo que permite a las aplicaciones eludir el filtro. Pulse aquí y seleccione «Automático» o «Desactivado».</string>
 
     <string name="error_no_apps">No hay ninguna aplicación seleccionada.</string>
@@ -37,5 +116,10 @@
     <string name="provider_mullvad_base">Mullvad Base (anuncios, rastreadores y malware)</string>
     <string name="provider_mullvad_adblock">Mullvad Adblock (anuncios y rastreadores)</string>
     <string name="provider_adguard">AdGuard (anuncios y rastreadores)</string>
+    <string name="provider_adguard_family">AdGuard Familiar (también contenido para adultos)</string>
+    <string name="provider_mullvad_extended">Mullvad Extended (Base y redes sociales)</string>
+    <string name="provider_mullvad_family">Mullvad Family (Base, adultos y apuestas)</string>
+    <string name="provider_mullvad_all">Mullvad All (Base, redes sociales, adultos y apuestas)</string>
+    <string name="provider_custom">Servidor personalizado (DNS-over-HTTPS)</string>
     <string name="provider_mullvad_plain">Mullvad sin bloqueo (solo privacidad)</string>
 </resources>

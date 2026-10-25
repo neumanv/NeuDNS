@@ -11,18 +11,58 @@ import java.net.URL
  * Resuelve consultas DNS enviándolas cifradas por HTTPS (DNS-over-HTTPS, RFC 8484).
  *
  * Las conexiones HTTPS se reutilizan, así que la mayoría de consultas no abren conexión nueva.
- * Si el servidor no responde se devuelve SERVFAIL al momento, para que la app no se quede
- * esperando. Todo lo que llega del servidor se valida antes de usarlo o guardarlo en caché.
+ * Si el servidor no responde se devuelve la última respuesta conocida, aunque haya caducado, o
+ * SERVFAIL al momento, para que la app no se quede esperando. Todo lo que llega del servidor se
+ * valida antes de usarlo o guardarlo en caché.
+ *
+ * Los dominios de [exceptions] (y sus subdominios) se preguntan a un servidor que no bloquea
+ * nada ([unfilteredUrl]): así el usuario puede desbloquear lo que una app necesita. Los de
+ * [blocked] se responden como inexistentes sin preguntar a nadie. Si un dominio está en las dos
+ * listas a la vez (por ejemplo, se permite «ejemplo.com» y se bloquea «ads.ejemplo.com»), decide
+ * la entrada más concreta.
  */
 class DohResolver(
     val url: String,
     private val open: (URL) -> HttpURLConnection = { it.openConnection() as HttpURLConnection },
+    unfilteredUrl: String? = null,
+    private val now: () -> Long = SystemClock::elapsedRealtime,
 ) {
     private val endpoint = URL(url)
-    private val cache = DnsCache()
+    private val unfilteredEndpoint = unfilteredUrl?.let(::URL)
+    private val cache = DnsCache(now = now)
+
+    /** Dominios que no se bloquean. Al cambiarlos se olvida la caché, que podría tenerlos bloqueados. */
+    @Volatile
+    var exceptions: Set<String> = emptySet()
+        set(value) {
+            if (value == field) return
+            field = value
+            cache.clear()
+        }
+
+    /** Dominios que bloquea el usuario. Se comprueban antes de la caché, así que no hace falta vaciarla. */
+    @Volatile
+    var blocked: Set<String> = emptySet()
+
+    /**
+     * Hasta cuándo (según [now]) no se bloquea nada: todo se pregunta al servidor sin bloqueo.
+     * Solo funciona si hay [unfilteredUrl].
+     */
+    @Volatile
+    var pausedUntil: Long = 0
+
+    val canPause: Boolean get() = unfilteredEndpoint != null
+
+    /** Se llama con el nombre de cada consulta contestada y si se ha bloqueado, y quién lo ha hecho. */
+    @Volatile
+    var onAnswer: ((name: String, block: Block) -> Unit)? = null
+
+    enum class Block { NONE, SERVER, USER }
 
     init {
-        require(endpoint.protocol == "https") { "El servidor DNS debe usar HTTPS" }
+        for (target in listOfNotNull(endpoint, unfilteredEndpoint)) {
+            require(target.protocol == "https") { "El servidor DNS debe usar HTTPS" }
+        }
     }
 
     /** Respuesta para la app, o null si lo recibido no es una consulta DNS válida. */
@@ -39,38 +79,66 @@ class DohResolver(
             return DnsMessage.errorResponse(query, DnsMessage.RCODE_NXDOMAIN)
         }
 
-        cache.get(query, questionEnd)?.let { return it }
+        val unfiltered = unfilteredEndpoint
+        if (unfiltered != null && now() < pausedUntil) {
+            // En pausa no se usa la caché: puede tener respuestas bloqueadas, y las de ahora no deben quedarse.
+            val response = fetch(unfiltered, query)?.takeIf { DnsMessage.sameQuestion(query, questionEnd, it) }
+            report(name, Block.NONE)
+            return response?.withIdOf(query) ?: DnsMessage.errorResponse(query, DnsMessage.RCODE_SERVFAIL)
+        }
 
-        val response = fetch(query)
+        val allowed = if (unfiltered != null && name != null) Domains.match(name, exceptions) else null
+        val denied = name?.let { Domains.match(it, blocked) }
+        if (denied != null && (allowed == null || denied.length > allowed.length)) {
+            report(name, Block.USER)
+            return DnsMessage.errorResponse(query, DnsMessage.RCODE_NXDOMAIN)
+        }
+
+        val response = lookup(unfiltered.takeIf { allowed != null } ?: endpoint, query, questionEnd)
+        // Lo que contesta el servidor sin bloqueo nunca cuenta como bloqueado.
+        val blockedByServer = allowed == null && response != null && DnsMessage.isBlocked(response)
+        report(name, if (blockedByServer) Block.SERVER else Block.NONE)
+        return response
+    }
+
+    private fun lookup(target: URL, query: ByteArray, questionEnd: Int): ByteArray? {
+        cache.get(query, questionEnd)?.let { return it }
+        val response = fetch(target, query)
         if (response == null || !DnsMessage.sameQuestion(query, questionEnd, response)) {
-            return DnsMessage.errorResponse(query, DnsMessage.RCODE_SERVFAIL)
+            return cache.getStale(query, questionEnd) ?: DnsMessage.errorResponse(query, DnsMessage.RCODE_SERVFAIL)
         }
         cache.put(query, questionEnd, response)
-        return response.copyOf().apply {
-            this[0] = query[0]
-            this[1] = query[1]
-        }
+        return response.withIdOf(query)
+    }
+
+    private fun report(name: String?, block: Block) {
+        if (name != null) onAnswer?.invoke(name, block)
+    }
+
+    private fun ByteArray.withIdOf(query: ByteArray) = copyOf().apply {
+        this[0] = query[0]
+        this[1] = query[1]
     }
 
     /** Olvida lo guardado, por ejemplo al cambiar de red. */
     fun clearCache() = cache.clear()
 
-    private fun fetch(query: ByteArray): ByteArray? {
+    private fun fetch(target: URL, query: ByteArray): ByteArray? {
         // RFC 8484 recomienda ID 0 para que las respuestas se puedan cachear.
         val body = query.copyOf().apply {
             this[0] = 0
             this[1] = 0
         }
-        val start = SystemClock.elapsedRealtime()
-        post(body)?.let { return it }
+        val start = now()
+        post(target, body)?.let { return it }
         // Un fallo inmediato suele ser una conexión reutilizada que el servidor ya cerró:
         // se reintenta una vez. Un fallo por tiempo agotado no se repite.
-        return if (SystemClock.elapsedRealtime() - start < RETRY_WINDOW_MS) post(body) else null
+        return if (now() - start < RETRY_WINDOW_MS) post(target, body) else null
     }
 
-    private fun post(body: ByteArray): ByteArray? {
+    private fun post(target: URL, body: ByteArray): ByteArray? {
         val connection = try {
-            open(endpoint)
+            open(target)
         } catch (_: IOException) {
             return null
         }

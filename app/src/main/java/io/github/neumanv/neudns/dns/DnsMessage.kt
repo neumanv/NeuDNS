@@ -17,7 +17,17 @@ internal object DnsMessage {
 
     /** Sin EDNS0 una respuesta UDP no puede pasar de 512 bytes. */
     private const val CLASSIC_UDP_SIZE = 512
+    private const val TYPE_A = 1
+    private const val TYPE_SOA = 6
+    private const val TYPE_AAAA = 28
     private const val TYPE_OPT = 41
+
+    /**
+     * Servidor primario (MNAME) del SOA con el que los servidores indican que han bloqueado un
+     * dominio: Mullvad responde NXDOMAIN desde su zona RPZ y AdGuard, una respuesta vacía.
+     */
+    private val BLOCK_SOA_NAMES = setOf("rpz.mullvad.net", "fake-for-negative-caching.adguard.com")
+    private const val MAX_POINTERS = 16
 
     fun isQuery(msg: ByteArray) = msg.size >= HEADER_SIZE && msg.u8(2) and 0x80 == 0
 
@@ -93,6 +103,55 @@ internal object DnsMessage {
         val offsets = ArrayList<Int>()
         val ok = forEachRecord(msg) { type, offset -> if (type != TYPE_OPT) offsets += offset + 4 }
         return if (ok) offsets.toIntArray() else null
+    }
+
+    /**
+     * true si [response] es una respuesta de bloqueo: la dirección 0.0.0.0 o :: (AdGuard, NextDNS,
+     * Control D…) o el SOA de bloqueo de Mullvad o AdGuard. Un NXDOMAIN corriente (un dominio que
+     * de verdad no existe) no cuenta.
+     */
+    fun isBlocked(response: ByteArray): Boolean {
+        var blocked = false
+        forEachRecord(response) { type, offset ->
+            val dataStart = offset + 10
+            val dataLength = response.u16(offset + 8)
+            when (type) {
+                TYPE_A -> if (dataLength == 4 && isZero(response, dataStart, dataLength)) blocked = true
+                TYPE_AAAA -> if (dataLength == 16 && isZero(response, dataStart, dataLength)) blocked = true
+                TYPE_SOA -> if (nameAt(response, dataStart) in BLOCK_SOA_NAMES) blocked = true
+            }
+        }
+        return blocked
+    }
+
+    private fun isZero(msg: ByteArray, start: Int, length: Int): Boolean {
+        if (start + length > msg.size) return false
+        for (i in start until start + length) if (msg[i].toInt() != 0) return false
+        return true
+    }
+
+    /** Nombre en minúsculas que empieza en [start], siguiendo la compresión, o null si está mal formado. */
+    private fun nameAt(msg: ByteArray, start: Int): String? {
+        val name = StringBuilder()
+        var offset = start
+        var jumps = 0
+        while (offset < msg.size) {
+            val length = msg.u8(offset)
+            when {
+                length == 0 -> return name.toString()
+                length and 0xC0 == 0xC0 -> {
+                    if (offset + 2 > msg.size || ++jumps > MAX_POINTERS) return null
+                    offset = msg.u16(offset) and 0x3FFF
+                }
+                length and 0xC0 != 0 || offset + 1 + length > msg.size -> return null
+                else -> {
+                    if (name.isNotEmpty()) name.append('.')
+                    for (i in offset + 1..offset + length) name.append(asciiLower(msg[i]))
+                    offset += length + 1
+                }
+            }
+        }
+        return null
     }
 
     /** Respuesta vacía con el código de error indicado (SERVFAIL, NXDOMAIN…). */
